@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset=UTF-8/>
+	<link rel="stylesheet" type="text/css" href="styles.css"/>
+</head>
+<body>
+<script src="three.min.js"></script>
+<script src="GLTFLoader.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+    let scene, camera, renderer, controls, light, model;
+
+    function init() {
+
+        scene = new THREE.Scene();
+        // scene.add(new THREE.AxesHelper(500));
+        // scene.background = new THREE.Color(0xdddddd);
+        scene.background = new THREE.CubeTextureLoader()
+            // .setPath('skybox/')
+            // .load([
+            //     'posx.jpg',
+            //     'negx.jpg',
+            //     'posy.jpg',
+            //     'negy.jpg',
+            //     'posz.jpg',
+            //     'negz.jpg'
+            // ]);
+
+            .setPath('daylightBox/')
+            .load([
+                'Daylight Box_Right.bmp',
+                'Daylight Box_Left.bmp',
+                'Daylight Box_Top.bmp',
+                'Daylight Box_Bottom.bmp',
+                'Daylight Box_Front.bmp',
+                'Daylight Box_Back.bmp',
+
+            ]);
+
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000);
+        camera.position.set(0, -50, -50);
+        controls = new THREE.OrbitControls(camera);
+
+
+        light = new THREE.SpotLight(0xffa95c, 4);
+        light.position.set(-50, 50, 50);
+        light.castShadow = true;
+        light.shadow.bias = -0.0001;
+        light.shadow.mapSize.width = 1024 * 4;
+        light.shadow.mapSize.height = 1024 * 4;
+        scene.add(light);
+
+        hemiLight = new THREE.HemisphereLight(0xffeeb1, 0x080820, 4);
+        scene.add(hemiLight);
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 2.3;
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+
+        new THREE.GLTFLoader().load('model/scene.gltf', result => {
+            model = result.scene.children[0];
+            model.position.set(0, 0, 0);
+            model.traverse(n => {
+                if (n.isMesh) {
+                    n.castShadow = true;
+                    n.receiveShadow = true;
+                    if (n.material.map) n.material.map.anisotropy = 1;
+                }
+            });
+            scene.add(model);
+
+            animate();
+        });
+    }
+
+    function animate() {
+        renderer.render(scene, camera);
+        light.position.set(
+            camera.position.x + 10,
+            camera.position.y + 10,
+            camera.position.z + 10,
+        );
+        requestAnimationFrame(animate);
+    }
+
+    init();
+
+</script>
+</body>
+</html>
